@@ -195,8 +195,8 @@ and message <code>HTTPError.Message</code>.</li>
 <h3 id="debug">Debug</h3>
 <p><code>Echo.SetDebug(on bool)</code></p>
 <p>Enables debug mode.</p>
-<h3 id="disable-colored-log">Disable colored log</h3>
-<p><code>Echo.DisableColoredLog()</code> </p>
+<h3 id="enabledisable-colored-log">Enable/Disable colored log</h3>
+<p><code>Echo.ColoredLog(on bool)</code> </p>
 <h2 id="routing">Routing</h2>
 <p>Echo's router is <a href="https://github.com/labstack/echo#benchmark">fast, optimized</a> and
 flexible. It's based on <a href="http://en.wikipedia.org/wiki/Radix_tree">radix tree</a> data
@@ -205,7 +205,7 @@ to reuse memory and achieve zero dynamic memory allocation with no GC overhead.<
 <p>Routes can be registered by specifying HTTP method, path and a handler. For example,
 code below registers a route for method <code>GET</code>, path <code>/hello</code> and a handler which sends
 <code>Hello!</code> HTTP response.</p>
-<pre><code class="go">echo.Get(&quot;/hello&quot;, func(c *echo.Context) error {
+<pre><code class="go">e.Get(&quot;/hello&quot;, func(c *echo.Context) error {
     return c.String(http.StatusOK, &quot;Hello!&quot;)
 })
 </code></pre>
@@ -272,9 +272,9 @@ e.Use(mw.BasicAuth(func(usr, pwd string) bool {
 <p><code>Echo.URI</code> can be used generate URI for any handler with specified path parameters.
 It's helpful to centralize all your URI patterns which ease in refactoring your
 application.</p>
-<p><code>echo.URI(h, 1)</code> will generate <code>/users/1</code> for the route registered below</p>
+<p><code>e.URI(h, 1)</code> will generate <code>/users/1</code> for the route registered below</p>
 <pre><code class="go">// Handler
-h := func(*echo.Context) error {
+h := func(c *echo.Context) error {
     return c.String(http.StatusOK, &quot;OK&quot;)
 }
 
@@ -302,7 +302,7 @@ action, for example, logging every request.</p>
 <li>For invalid credentials, it sends "401 - Unauthorized" response.</li>
 </ul>
 <p><em>Example</em></p>
-<pre><code class="go">echo.Group(&quot;/admin&quot;)
+<pre><code class="go">e.Group(&quot;/admin&quot;)
 e.Use(mw.BasicAuth(func(usr, pwd string) bool {
     if usr == &quot;joe&quot; &amp;&amp; pwd == &quot;secret&quot; {
         return true
@@ -349,11 +349,11 @@ slash path.</p>
 <p><a href="https://github.com/labstack/echo/tree/master/examples/middleware">Examples</a></p>
 <h2 id="request">Request</h2>
 <h3 id="path-parameter">Path parameter</h3>
-<p>Path parameter can be retrieved either by name <code>echo.Context.Param(name string) string</code>
-or by index <code>echo.Context.P(i int) string</code>. Getting parameter by index gives a slightly
+<p>Path parameter can be retrieved either by name <code>Context.Param(name string) string</code>
+or by index <code>Context.P(i int) string</code>. Getting parameter by index gives a slightly
 better performance.</p>
 <p><em>Example</em></p>
-<pre><code class="go">echo.Get(&quot;/users/:name&quot;, func(c *echo.Context) error {
+<pre><code class="go">e.Get(&quot;/users/:name&quot;, func(c *echo.Context) error {
     // By name
     name := c.Param(&quot;name&quot;)
 
@@ -368,9 +368,9 @@ better performance.</p>
 </code></pre>
 
 <h3 id="query-parameter">Query parameter</h3>
-<p>Query parameter can be retrieved by name using <code>echo.Context.Query(name string)</code>.</p>
+<p>Query parameter can be retrieved by name using <code>Context.Query(name string)</code>.</p>
 <p><em>Example</em></p>
-<pre><code class="go">echo.Get(&quot;/users&quot;, func(c *echo.Context) error {
+<pre><code class="go">e.Get(&quot;/users&quot;, func(c *echo.Context) error {
     name := c.Query(&quot;name&quot;)
     return c.String(http.StatusOK, name)
 })
@@ -380,9 +380,9 @@ better performance.</p>
 </code></pre>
 
 <h3 id="form-parameter">Form parameter</h3>
-<p>Form parameter can be retrieved by name using <code>echo.Context.Form(name string)</code>. </p>
+<p>Form parameter can be retrieved by name using <code>Context.Form(name string)</code>. </p>
 <p><em>Example</em></p>
-<pre><code class="go">echo.Post(&quot;/users&quot;, func(c *echo.Context) error {
+<pre><code class="go">e.Post(&quot;/users&quot;, func(c *echo.Context) error {
     name := c.Form(&quot;name&quot;)
     return c.String(http.StatusOK, name)
 })
