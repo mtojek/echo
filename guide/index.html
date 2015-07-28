@@ -330,22 +330,6 @@ to the centralized <a href="#error-handling">HTTPErrorHandler</a>.</p>
 <pre><code class="go">e.Use(mw.StripTrailingSlash())
 </code></pre>
 
-<h3 id="redirecttoslash">RedirectToSlash</h3>
-<p>RedirectToSlash middleware redirects requests without trailing slash path to trailing
-slash path.</p>
-<p><em>Options</em></p>
-<pre><code class="go">RedirectToSlashOptions struct {
-    Code int
-}
-</code></pre>
-
-<p><em>Example</em></p>
-<pre><code class="go">e.Use(mw.RedirectToSlash())
-</code></pre>
-
-<blockquote>
-<p>StripTrailingSlash and RedirectToSlash middleware should not be used together.</p>
-</blockquote>
 <p><a href="https://github.com/labstack/echo/tree/master/examples/middleware">Examples</a></p>
 <h2 id="request">Request</h2>
 <h3 id="path-parameter">Path parameter</h3>
