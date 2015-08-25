@@ -436,6 +436,12 @@ e.Get(&quot;/hello&quot;, Hello)
 </code></pre>
 
 <p>Sends a text/plain HTTP response with status code.</p>
+<h3 id="file">File</h3>
+<pre><code class="go">Context.File(name string, attachment bool) error
+</code></pre>
+
+<p>File sends a response with the content of the file. If attachment is true, the client
+is prompted to save the file.</p>
 <h3 id="static-files">Static files</h3>
 <p><code>Echo.Static(path, root string)</code> serves static files. For example, code below serves
 files from directory <code>public/scripts</code> for any request path starting with <code>/scripts/</code>.</p>
