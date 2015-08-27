@@ -383,39 +383,41 @@ better performance.</p>
 <p>Renders a template with data and sends a text/html response with status code. Templates
 can be registered using <code>Echo.SetRenderer()</code>, allowing us to use any template engine.</p>
 <p>Below is an example using Go <code>html/template</code></p>
-<ol>
-<li>
-<p>Implement <code>echo.Render</code> interface</p>
-<p>```go
-Template struct {
+<ul>
+<li>Implement <code>echo.Render</code> interface</li>
+</ul>
+<pre><code class="go">Template struct {
     templates *template.Template
-}</p>
-<p>func (t *Template) Render(w io.Writer, name string, data interface{}) error {
+}
+
+func (t *Template) Render(w io.Writer, name string, data interface{}) error {
     return t.templates.ExecuteTemplate(w, name, data)
 }
-```</p>
-</li>
-<li>
-<p>Pre-compile templates</p>
+</code></pre>
+
+<ul>
+<li>Pre-compile templates</li>
+</ul>
 <p><code>public/views/hello.html</code></p>
-<p><code>html
-{{define "hello"}}Hello, {{.}}!{{end}}</code></p>
-<p><code>go
-t := &amp;Template{
-    templates: template.Must(template.ParseGlob("public/views/*.html")),
-}</code></p>
-</li>
-<li>
-<p>Register templates</p>
-<p><code>go
-e := echo.New()
+<pre><code class="html">{{define &quot;hello&quot;}}Hello, {{.}}!{{end}}
+</code></pre>
+
+<pre><code class="go">t := &amp;Template{
+    templates: template.Must(template.ParseGlob(&quot;public/views/*.html&quot;)),
+}
+</code></pre>
+
+<ul>
+<li>Register templates</li>
+</ul>
+<pre><code class="go">e := echo.New()
 e.SetRenderer(t)
-e.Get("/hello", Hello)</code></p>
-</li>
-<li>
-<p>Render template</p>
-</li>
-</ol>
+e.Get(&quot;/hello&quot;, Hello)
+</code></pre>
+
+<ul>
+<li>Render template</li>
+</ul>
 <pre><code class="go">func Hello(c *echo.Context) error {
     return c.Render(http.StatusOK, &quot;hello&quot;, &quot;World&quot;)
 }
