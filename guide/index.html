@@ -193,10 +193,13 @@ and message <code>HTTPError.Message</code>.</li>
 <li>If debug mode is enabled, it uses <code>error.Error()</code> as status message.</li>
 </ul>
 <h3 id="debug">Debug</h3>
-<p><code>Echo.SetDebug(on bool)</code></p>
+<p><code>Echo.Debug()</code></p>
 <p>Enables debug mode.</p>
 <h3 id="disable-colored-log">Disable colored log</h3>
 <p><code>Echo.DisableColoredLog()</code></p>
+<h3 id="striptrailingslash">StripTrailingSlash</h3>
+<p>StripTrailingSlash enables removing trailing slash from the request path.</p>
+<p><code>e.StripTrailingSlash()</code></p>
 <h2 id="routing">Routing</h2>
 <p>Echo's router is <a href="https://github.com/labstack/echo#benchmark">fast, optimized</a> and
 flexible. It's based on <a href="http://en.wikipedia.org/wiki/Radix_tree">radix tree</a> data
@@ -322,12 +325,6 @@ e.Use(mw.BasicAuth(func(usr, pwd string) bool {
 to the centralized <a href="#error-handling">HTTPErrorHandler</a>.</p>
 <p><em>Example</em></p>
 <pre><code class="go">e.Use(mw.Recover())
-</code></pre>
-
-<h3 id="striptrailingslash">StripTrailingSlash</h3>
-<p>StripTrailingSlash middleware removes the trailing slash from request path.</p>
-<p><em>Example</em></p>
-<pre><code class="go">e.Use(mw.StripTrailingSlash())
 </code></pre>
 
 <p><a href="https://github.com/labstack/echo/tree/master/examples/middleware">Examples</a></p>
