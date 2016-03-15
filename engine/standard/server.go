@@ -126,10 +126,19 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.pool.header.Put(resHdr)
 }
 
+type responseWriterAdapter struct {
+	http.ResponseWriter
+	writeFunc func(b []byte) (n int, err error)
+}
+
+func (r *responseWriterAdapter) Write(b []byte) (n int, err error) {
+	return r.writeFunc(b)
+}
+
 // WrapHandler wraps `http.Handler` into `echo.HandlerFunc`.
 func WrapHandler(h http.Handler) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		w := c.Response().(*Response).ResponseWriter
+		w := &responseWriterAdapter{ResponseWriter: c.Response().(*Response).ResponseWriter, writeFunc: c.Response().Write }
 		r := c.Request().(*Request).Request
 		h.ServeHTTP(w, r)
 		return nil
