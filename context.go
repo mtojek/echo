@@ -182,7 +182,7 @@ func (c *context) Get(key string) interface{} {
 	return c.store[key]
 }
 
-// Bind binds the request body into specified type `i`. The default binder does
+// Bind binds the request body into provided type `i`. The default binder does
 // it based on Content-Type header.
 func (c *context) Bind(i interface{}) error {
 	return c.echo.binder.Bind(i, c)
@@ -367,6 +367,7 @@ func detectContentType(name string) (t string) {
 }
 
 func (c *context) reset(req engine.Request, res engine.Response) {
+	c.netContext = nil
 	c.request = req
 	c.response = res
 	c.query = nil

@@ -27,7 +27,7 @@ type (
 	}
 )
 
-// New returns an instance of `standard.Server` with specified listen address.
+// New returns an instance of `standard.Server` with provided listen address.
 func New(addr string) *Server {
 	c := engine.Config{Address: addr}
 	return NewFromConfig(c)
@@ -129,7 +129,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // WrapHandler wraps `http.Handler` into `echo.HandlerFunc`.
 func WrapHandler(h http.Handler) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		w := c.Response().(*Response).ResponseWriter
+		w := &responseAdapter{
+			ResponseWriter: c.Response().(*Response).ResponseWriter,
+			writer:         c.Response(),
+		}
 		r := c.Request().(*Request).Request
 		h.ServeHTTP(w, r)
 		return nil
@@ -143,7 +146,10 @@ func WrapMiddleware(m func(http.Handler) http.Handler) echo.MiddlewareFunc {
 			req := c.Request().(*Request)
 			res := c.Response().(*Response)
 			m(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				res.ResponseWriter = w
+				res.ResponseWriter = &responseAdapter{
+					ResponseWriter: res.ResponseWriter,
+					writer:         c.Response(),
+				}
 				req.Request = r
 				err = next.Handle(c)
 			})).ServeHTTP(res.ResponseWriter, req.Request)
