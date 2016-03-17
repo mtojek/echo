@@ -80,7 +80,7 @@ func (r *Request) URI() string {
 	return r.request.RequestURI
 }
 
-func (r *Request) Body() io.ReadCloser {
+func (r *Request) Body() io.Reader {
 	return r.request.Body
 }
 
@@ -96,10 +96,6 @@ func (r *Request) FormFile(name string) (*multipart.FileHeader, error) {
 func (r *Request) MultipartForm() (*multipart.Form, error) {
 	m := r.request.MultipartForm
 	return m, nil
-}
-
-func (r *Request) Object() interface{} {
-	return r.request
 }
 
 func (r *Request) reset(req *http.Request, h engine.Header, u engine.URL) {
