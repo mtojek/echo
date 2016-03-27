@@ -9,7 +9,6 @@ import (
 	"github.com/labstack/echo/engine"
 	"github.com/labstack/gommon/log"
 	"github.com/valyala/fasthttp"
-	"net"
 )
 
 type (
@@ -104,6 +103,7 @@ func (s *Server) Start() error {
 		return s.startDefaultListener()
 	}
 	return s.startCustomListener()
+
 }
 
 func (s *Server) startDefaultListener() error {
@@ -146,19 +146,13 @@ func (s *Server) ServeHTTP(c *fasthttp.RequestCtx) {
 	s.pool.responseHeader.Put(resHdr)
 }
 
-func (s *Server) startCustomListener(certfile, keyfile string, handler func(c *fasthttp.RequestCtx)) {
-	if certfile != "" && keyfile != "" {
-		s.logger.Fatal(fasthttp.ServeTLS(s.listener, certfile, keyfile, handler))
-	} else {
-		s.logger.Fatal(fasthttp.Serve(s.listener, handler))
-	}
-}
-
 // WrapHandler wraps `fasthttp.RequestHandler` into `echo.HandlerFunc`.
 func WrapHandler(h fasthttp.RequestHandler) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().(*Request).RequestCtx
 		h(ctx)
+		c.Response().(*Response).status = ctx.Response.StatusCode()
+		c.Response().(*Response).size = int64(ctx.Response.Header.ContentLength())
 		return nil
 	}
 }

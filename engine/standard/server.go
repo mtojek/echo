@@ -7,18 +7,16 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/engine"
 	"github.com/labstack/gommon/log"
-	"net"
 )
 
 type (
 	// Server implements `engine.Server`.
 	Server struct {
 		*http.Server
-		config   engine.Config
-		handler  engine.Handler
-		listener net.Listener
-		logger   *log.Logger
-		pool     *pool
+		config  engine.Config
+		handler engine.Handler
+		logger  *log.Logger
+		pool    *pool
 	}
 
 	pool struct {
@@ -112,10 +110,6 @@ func (s *Server) startCustomListener() error {
 	return s.Serve(s.config.Listener)
 }
 
-func (s *Server) startCustomListener() {
-	s.logger.Fatal(s.Serve(s.listener))
-}
-
 // ServeHTTP implements `http.Handler` interface.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Request
@@ -146,6 +140,7 @@ func WrapHandler(h http.Handler) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		w := &responseAdapter{
 			ResponseWriter: c.Response().(*Response).ResponseWriter,
+			response:       c.Response().(*Response),
 			writer:         c.Response(),
 		}
 		r := c.Request().(*Request).Request
