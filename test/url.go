@@ -21,11 +21,18 @@ func (u *URL) Path() string {
 	return u.url.Path
 }
 
-func (u *URL) QueryValue(name string) string {
+func (u *URL) QueryParam(name string) string {
 	if u.query == nil {
 		u.query = u.url.Query()
 	}
 	return u.query.Get(name)
+}
+
+func (u *URL) QueryParams() map[string][]string {
+	if u.query == nil {
+		u.query = u.url.Query()
+	}
+	return map[string][]string(u.query)
 }
 
 func (u *URL) QueryString() string {

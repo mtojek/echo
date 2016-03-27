@@ -5,12 +5,14 @@ import (
 	"mime/multipart"
 	"time"
 
+	"net"
+
 	"github.com/labstack/gommon/log"
 	"net")
 
 type (
-	// Engine defines the interface for HTTP server.
-	Engine interface {
+	// Server defines the interface for HTTP server.
+	Server interface {
 		// SetHandler sets the handler for the HTTP server.
 		SetHandler(Handler)
 
@@ -21,7 +23,7 @@ type (
 		SetListener(net.Listener)
 
 		// Start starts the HTTP server.
-		Start()
+		Start() error
 	}
 
 	// Request defines the interface for HTTP request.
@@ -55,7 +57,7 @@ type (
 		// RemoteAddress returns the client's network address.
 		RemoteAddress() string
 
-		// Method returns the request's HTTP method.
+		// Method returns the request's HTTP function.
 		Method() string
 
 		// SetMethod sets the HTTP method of the request.
@@ -64,13 +66,16 @@ type (
 		// Body returns request's body.
 		Body() io.Reader
 
-		// FormValue returns form field value for the provided name.
+		// FormValue returns the form field value for the provided name.
 		FormValue(string) string
 
-		// FormFile returns form file for the provided name.
+		// FormParams returns the form parameters.
+		FormParams() map[string][]string
+
+		// FormFile returns the multipart form file for the provided name.
 		FormFile(string) (*multipart.FileHeader, error)
 
-		// MultipartForm returns multipart form.
+		// MultipartForm returns the multipart form.
 		MultipartForm() (*multipart.Form, error)
 	}
 
@@ -130,16 +135,20 @@ type (
 		// SetPath sets the request URL path.
 		SetPath(string)
 
-		// QueryValue returns query parameter value for the provided name.
-		QueryValue(string) string
+		// QueryParam returns the query param for the provided name.
+		QueryParam(string) string
+
+		// QueryParam returns the query parameters as map.
+		QueryParams() map[string][]string
 
 		// QueryString returns the URL query string.
 		QueryString() string
 	}
 
-	// Config defines engine configuration.
+	// Config defines engine config.
 	Config struct {
 		Address      string        // TCP address to listen on.
+		Listener     net.Listener  // Custom `net.Listener`. If set, server accepts connections on it.
 		TLSCertfile  string        // TLS certificate file path.
 		TLSKeyfile   string        // TLS key file path.
 		ReadTimeout  time.Duration // Maximum duration before timing out read of the request.
@@ -152,11 +161,12 @@ type (
 		ServeHTTP(Request, Response)
 	}
 
-	// HandlerFunc is an adapter to allow the use of `func(Request, Response)` as HTTP handlers.
+	// HandlerFunc is an adapter to allow the use of `func(Request, Response)` as
+	// an HTTP handler.
 	HandlerFunc func(Request, Response)
 )
 
 // ServeHTTP serves HTTP request.
-func (h HandlerFunc) ServeHTTP(req Request, res Response) {
-	h(req, res)
+func (h HandlerFunc) ServeHTTP(rq Request, rs Response) {
+	h(rq, rs)
 }
