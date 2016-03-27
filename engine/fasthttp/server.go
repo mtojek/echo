@@ -13,13 +13,13 @@ import (
 )
 
 type (
-	// Server implements `engine.Engine`.
+	// Server implements `engine.Server`.
 	Server struct {
-		config   engine.Config
-		handler  engine.Handler
-		listener net.Listener
-		logger   *log.Logger
-		pool     *pool
+		*fasthttp.Server
+		config  engine.Config
+		handler engine.Handler
+		logger  *log.Logger
+		pool    *pool
 	}
 
 	pool struct {
@@ -50,6 +50,7 @@ func NewFromTLS(addr, certfile, keyfile string) *Server {
 // NewFromConfig returns an instance of `standard.Server` from config.
 func NewFromConfig(c engine.Config) (s *Server) {
 	s = &Server{
+		Server: new(fasthttp.Server),
 		config: c,
 		pool: &pool{
 			request: sync.Pool{
@@ -78,72 +79,71 @@ func NewFromConfig(c engine.Config) (s *Server) {
 				},
 			},
 		},
-		handler: engine.HandlerFunc(func(req engine.Request, res engine.Response) {
-			s.logger.Fatal("handler not set")
+		handler: engine.HandlerFunc(func(rq engine.Request, rs engine.Response) {
+			s.logger.Error("handler not set, use `SetHandler()` to set it.")
 		}),
 		logger: log.New("echo"),
 	}
+	s.Handler = s.ServeHTTP
 	return
 }
 
-// SetHandler implements `engine.Engine#SetHandler` method.
+// SetHandler implements `engine.Server#SetHandler` function.
 func (s *Server) SetHandler(h engine.Handler) {
 	s.handler = h
 }
 
-// SetHandler implements `engine.Engine#SetListener` method.
-func (s *Server) SetListener(ln net.Listener) {
-	s.listener = ln
-}
-
-// SetLogger implements `engine.Engine#SetLogger` method.
+// SetLogger implements `engine.Server#SetLogger` function.
 func (s *Server) SetLogger(l *log.Logger) {
 	s.logger = l
 }
 
-// Start implements `engine.Engine#Start` method.
-func (s *Server) Start() {
-	handler := func(c *fasthttp.RequestCtx) {
-		// Request
-		req := s.pool.request.Get().(*Request)
-		reqHdr := s.pool.requestHeader.Get().(*RequestHeader)
-		reqURL := s.pool.url.Get().(*URL)
-		reqHdr.reset(&c.Request.Header)
-		reqURL.reset(c.URI())
-		req.reset(c, reqHdr, reqURL)
-
-		// Response
-		res := s.pool.response.Get().(*Response)
-		resHdr := s.pool.responseHeader.Get().(*ResponseHeader)
-		resHdr.reset(&c.Response.Header)
-		res.reset(c, resHdr)
-
-		s.handler.ServeHTTP(req, res)
-
-		s.pool.request.Put(req)
-		s.pool.requestHeader.Put(reqHdr)
-		s.pool.url.Put(reqURL)
-		s.pool.response.Put(res)
-		s.pool.responseHeader.Put(resHdr)
+// Start implements `engine.Server#Start` function.
+func (s *Server) Start() error {
+	if s.config.Listener == nil {
+		return s.startDefaultListener()
 	}
-
-	addr := s.config.Address
-	certfile := s.config.TLSCertfile
-	keyfile := s.config.TLSKeyfile
-
-	if nil == s.listener {
-		s.startDefaultListener(addr, certfile, keyfile, handler)
-	} else {
-		s.startCustomListener(certfile, keyfile, handler)
-	}
+	return s.startCustomListener()
 }
 
-func (s *Server) startDefaultListener(addr, certfile, keyfile string, handler func(c *fasthttp.RequestCtx)) {
-	if certfile != "" && keyfile != "" {
-		s.logger.Fatal(fasthttp.ListenAndServeTLS(addr, certfile, keyfile, handler))
-	} else {
-		s.logger.Fatal(fasthttp.ListenAndServe(addr, handler))
+func (s *Server) startDefaultListener() error {
+	c := s.config
+	if c.TLSCertfile != "" && c.TLSKeyfile != "" {
+		return s.ListenAndServeTLS(c.Address, c.TLSCertfile, c.TLSKeyfile)
 	}
+	return s.ListenAndServe(c.Address)
+}
+
+func (s *Server) startCustomListener() error {
+	c := s.config
+	if c.TLSCertfile != "" && c.TLSKeyfile != "" {
+		return s.ServeTLS(c.Listener, c.TLSCertfile, c.TLSKeyfile)
+	}
+	return s.Serve(c.Listener)
+}
+
+func (s *Server) ServeHTTP(c *fasthttp.RequestCtx) {
+	// Request
+	rq := s.pool.request.Get().(*Request)
+	reqHdr := s.pool.requestHeader.Get().(*RequestHeader)
+	reqURL := s.pool.url.Get().(*URL)
+	reqHdr.reset(&c.Request.Header)
+	reqURL.reset(c.URI())
+	rq.reset(c, reqHdr, reqURL)
+
+	// Response
+	rs := s.pool.response.Get().(*Response)
+	resHdr := s.pool.responseHeader.Get().(*ResponseHeader)
+	resHdr.reset(&c.Response.Header)
+	rs.reset(c, resHdr)
+
+	s.handler.ServeHTTP(rq, rs)
+
+	s.pool.request.Put(rq)
+	s.pool.requestHeader.Put(reqHdr)
+	s.pool.url.Put(reqURL)
+	s.pool.response.Put(rs)
+	s.pool.responseHeader.Put(resHdr)
 }
 
 func (s *Server) startCustomListener(certfile, keyfile string, handler func(c *fasthttp.RequestCtx)) {
