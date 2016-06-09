@@ -42,3 +42,5 @@ node_modules
 
 # Glide
 vendor
+
+.DS_Store
